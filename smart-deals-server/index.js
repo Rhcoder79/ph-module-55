@@ -27,7 +27,26 @@ async function run() {
  const db=client.db('smart_db')
  const productsCollection=db.collection('products');
 const bidsCollection=db.collection('bids');
+const usersCollection=db.collection('users');
+ // users api 
+app.post('/users',async(req,res)=>{
+    const newUser=req.body;
+    const email=req.body.email;
+    const query={email: email}
+    const existingUser=await usersCollection.findOne(query);
+    if(existingUser){
+    res.send({message: 'user already exits. do not need to insert again'})
+    }else{
+   
+        const result=await usersCollection.insertOne(newUser);
+    res.send(result);
+    }
 
+    
+
+})
+
+//products api
  app.get('/products',async(req,res)=>{
   //  const projectFields={title:1,price_min:1,price_max:1,image:1}
    // const cursor=productsCollection.find().sort({price_min:-1}).skip(4).limit(2).project(projectFields);
@@ -41,13 +60,28 @@ const bidsCollection=db.collection('bids');
     const result=await cursor.toArray();
     res.send(result)
  });
- app.get('/products/:id',async(req,res)=>{
-    const id=req.params.id;
-    const query={_id: new ObjectId(id)}
-    const result=await productsCollection.findOne(query);
-    res.send(result);
-
+ app.get('/latest-products',async(req,res)=>{
+  const cursor=productsCollection.find().sort({
+created_at:-1}).limit(6);
+  const result=await cursor.toArray();
+  res.send(result);
  })
+ app.get('/products/:id', async (req, res) => {
+    const id = req.params.id;
+    
+    
+    let query = { _id: id }; 
+    let result = await productsCollection.findOne(query);
+
+   
+    if (!result) {
+        query = { _id: new ObjectId(id) };
+        result = await productsCollection.findOne(query);
+    }
+
+    console.log("Final Result:", result);
+    res.send(result);
+});
  app.post('/products',async(req,res)=>{
    const newProduct=req.body;
    const result= await productsCollection.insertOne(newProduct);
@@ -86,11 +120,18 @@ app.patch('/products/:id',async(req,res)=>{
     res.send(result);
 
  })
+
  app.post('/bids',async(req,res)=>{
     const newBid=req.body;
     const result=await bidsCollection.insertOne(newBid)
     res.send(result);
  })
+ app.delete('/bids/:id',async(req,res)=>{
+const id=req.params.id;
+const query={_id: new ObjectId(id)}
+ const result=await bidsCollection.deleteOne(query);
+ res.send(result)   
+})
   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your hello deployment. You successfully connected to MongoDB!");
  }  
