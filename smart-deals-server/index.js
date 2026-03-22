@@ -82,6 +82,7 @@ created_at:-1}).limit(6);
     console.log("Final Result:", result);
     res.send(result);
 });
+
  app.post('/products',async(req,res)=>{
    const newProduct=req.body;
    const result= await productsCollection.insertOne(newProduct);
@@ -120,7 +121,15 @@ app.patch('/products/:id',async(req,res)=>{
     res.send(result);
 
  })
+ //app.get('/bids/byProduct/:productId')
 
+ app.get('/products/bids/:productId',async(req,res)=>{
+  const productId=req.params.productId;
+  const query={product:productId}
+  const cursor=bidsCollection.find(query).sort({bid_price:-1})
+  const result=await cursor.toArray();
+  res.send(result);
+})
  app.post('/bids',async(req,res)=>{
     const newBid=req.body;
     const result=await bidsCollection.insertOne(newBid)
